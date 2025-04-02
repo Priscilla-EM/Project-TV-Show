@@ -1,5 +1,61 @@
 //You can edit ALL of the code here
 
+document.addEventListener("DOMContentLoaded", () => {
+  const searchBar = document.getElementById("search-bar");
+  const episodeSelect = document.getElementById("episode-select");
+  const root = document.getElementById("root");
+  const episodeCount = document.getElementById("episode-count");
+  let allEpisodes = getAllEpisodes();
+
+  function displayEpisodes(episodes) {
+      root.innerHTML = "";
+      episodes.forEach(episode => {
+          const episodeElement = document.createElement("div");
+          episodeElement.classList.add("episode");
+          episodeElement.innerHTML = `
+              <h3>${episode.name} (S${String(episode.season).padStart(2, '0')}E${String(episode.number).padStart(2, '0')})</h3>
+              <img src="${episode.image ? episode.image.medium : ''}" alt="Episode image">
+              <p>${episode.summary}</p>
+          `;
+          root.appendChild(episodeElement);
+      });
+      episodeCount.textContent = `${episodes.length} episode(s) found`;
+  }
+
+  function filterEpisodes() {
+      const searchTerm = searchBar.value.toLowerCase();
+      const filteredEpisodes = allEpisodes.filter(episode => 
+          episode.name.toLowerCase().includes(searchTerm) || 
+          episode.summary.toLowerCase().includes(searchTerm)
+      );
+      displayEpisodes(filteredEpisodes);
+  }
+
+  function populateEpisodeDropdown() {
+      episodeSelect.innerHTML = '<option value="">Select an episode</option>';
+      allEpisodes.forEach(episode => {
+          const option = document.createElement("option");
+          option.value = episode.id;
+          option.textContent = `S${String(episode.season).padStart(2, '0')}E${String(episode.number).padStart(2, '0')} - ${episode.name}`;
+          episodeSelect.appendChild(option);
+      });
+  }
+
+  function jumpToEpisode() {
+      const selectedId = episodeSelect.value;
+      if (!selectedId) return;
+      const selectedEpisode = allEpisodes.find(ep => ep.id == selectedId);
+      displayEpisodes([selectedEpisode]);
+  }
+
+  searchBar.addEventListener("input", filterEpisodes);
+  episodeSelect.addEventListener("change", jumpToEpisode);
+
+  displayEpisodes(allEpisodes);
+  populateEpisodeDropdown();
+});
+
+
 function setup() {
   const allEpisodes = getAllEpisodes();
   makePageForEpisodes(allEpisodes);
@@ -52,3 +108,6 @@ function makePageForEpisodes(episodeList) {
 }
 
 window.onload = setup;
+
+
+
