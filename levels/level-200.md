@@ -64,10 +64,11 @@ Add a `select` drop-down which lets the user jump quickly to a particular episod
 
 Send a pull request to your partner's repo with this functionality. Have them review, and when happy, merge your PR.
 
-#### Screenshot of minimal version
+#### Screenshot of minimal version 
 
 Note: Provided your project meets the above requirements, it can **look** however you want.
 
 Here is one example layout.
 
-![Screenshot of a website with a drop-down listing all available episodes](example-screenshots/example-level-200-selector.jpg)
+![Screenshot of a website with a drop-down listing all available episodes](example-screenshots/example-level-200-selector.jpg) 
+      
