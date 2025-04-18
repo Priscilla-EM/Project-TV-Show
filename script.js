@@ -1,8 +1,19 @@
 let allEpisodes = [];
 let allShows = [];
 const showCache = new Map(); // Cache episodes per show ID
+const allShowsCache = new Map(); // Cache all shows data
 
 function fetchShows() {
+  const root = document.getElementById("root");
+  if (allShowsCache.has("cachedShows")) {
+    allShows = allShowsCache.get("cachedShows");
+    renderShowList(allShows);
+    populateShowDropdown(allShows);
+    return;
+  }
+
+  root.innerHTML = "<p>Loading shows... please wait.</p>";
+
   fetch("https://api.tvmaze.com/shows")
     .then((response) => {
       if (!response.ok) throw new Error("Failed to fetch shows.");
@@ -12,9 +23,91 @@ function fetchShows() {
       allShows = data.sort((a, b) =>
         a.name.toLowerCase().localeCompare(b.name.toLowerCase())
       );
+      allShowsCache.set("cachedShows", allShows);
+
+      // Preload the first show's image so the image loads faster
+      const firstImage = allShows[0]?.image?.medium;
+      if (firstImage) {
+        const preloadLink = document.createElement("link");
+        preloadLink.rel = "preload";
+        preloadLink.as = "image";
+        preloadLink.href = firstImage;
+        document.head.appendChild(preloadLink);
+      }
+
+      renderShowList(allShows);
       populateShowDropdown(allShows);
     })
-    .catch((error) => console.error("Error fetching shows:", error));
+    .catch((error) => {
+      console.error("Error fetching shows:", error);
+      root.innerHTML = `<p style="color:red;">${error.message}</p>`;
+    });
+}
+
+function renderShowList(showList) {
+  const rootElem = document.getElementById("root");
+  rootElem.innerHTML = "";
+  document.getElementById("search").style.display = "none";
+  document.getElementById("episode-select").style.display = "none";
+  document.getElementById("episode-count").textContent = "";
+  addBackButton(false);
+
+  // Use DocumentFragment to batch DOM updates
+  const fragment = document.createDocumentFragment();
+
+  let index = 0;
+
+  function renderNextBatch() {
+    const BATCH_SIZE = 20; // Number of shows to load at once for better performance
+    const end = Math.min(index + BATCH_SIZE, showList.length);
+
+    for (; index < end; index++) {
+      const show = showList[index];
+      const showDiv = document.createElement("div");
+      showDiv.classList.add("show");
+
+      showDiv.innerHTML = `
+        <h2>${show.name}</h2>
+        <img src="${show.image?.medium || ""}" alt="${
+        show.name
+      }" width="210" height="295" loading="lazy" />
+        <p>${show.summary?.slice(0, 100)}...</p>
+        <p><strong>Genres:</strong> ${show.genres.join(", ")}</p>
+        <p><strong>Status:</strong> ${show.status}</p>
+        <p><strong>Rating:</strong> ${show.rating?.average ?? "N/A"}</p>
+        <p><strong>Runtime:</strong> ${show.runtime} mins</p>
+      `;
+
+      showDiv.addEventListener("click", () => {
+        fetchEpisodes(show.id);
+      });
+
+      fragment.appendChild(showDiv);
+    }
+
+    if (index < showList.length) {
+      // Schedule next batch
+      setTimeout(renderNextBatch, 0);
+    } else {
+      rootElem.appendChild(fragment); // Append all at once
+    }
+  }
+
+  renderNextBatch();
+}
+
+function addBackButton(show) {
+  let nav = document.getElementById("nav-back");
+  if (!nav) {
+    nav = document.createElement("button");
+    nav.id = "nav-back";
+    nav.textContent = "⬅ Back to Shows";
+    nav.addEventListener("click", () => {
+      renderShowList(allShows);
+    });
+    document.body.insertBefore(nav, document.getElementById("root"));
+  }
+  nav.style.display = show ? "inline-block" : "none";
 }
 
 function populateShowDropdown(allShows) {
@@ -32,8 +125,6 @@ function populateShowDropdown(allShows) {
     const selectedShowId = event.target.value;
     if (selectedShowId) {
       fetchEpisodes(selectedShowId);
-    } else {
-      fetchEpisodes("82"); // Reset to default if nothing selected
     }
   });
 }
@@ -68,6 +159,9 @@ function setup() {
   makePageForEpisodes(allEpisodes);
   setupSearch(allEpisodes);
   EpisodeSelector(allEpisodes);
+  document.getElementById("search").style.display = "inline-block";
+  document.getElementById("episode-select").style.display = "inline-block";
+  addBackButton(true);
 }
 
 function setupSearch(allEpisodes) {
@@ -149,6 +243,8 @@ function render(episodeList) {
     // Create an image for an episode
     const img = document.createElement("img");
     img.src = episode.image ? episode.image.medium : "placeholder.jpg";
+    img.width = 210;
+    img.height = 295;
     img.alt = episode.name;
 
     // Create a summary of the episode
@@ -169,7 +265,24 @@ function render(episodeList) {
   });
 }
 
+function setupShowSearch() {
+  const input = document.getElementById("show-search");
+  if (!input) return;
+
+  input.addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase();
+    const filtered = allShows.filter((show) => {
+      return (
+        show.name.toLowerCase().includes(term) ||
+        show.summary?.toLowerCase().includes(term) ||
+        show.genres.join(", ").toLowerCase().includes(term)
+      );
+    });
+    renderShowList(filtered);
+  });
+}
+
 window.onload = () => {
   fetchShows();
-  fetchEpisodes("82"); // Load a default show initially (ID 82)
+  setupShowSearch();
 };

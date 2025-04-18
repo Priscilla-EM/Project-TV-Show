@@ -4,33 +4,50 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TV Show Project | Priscilla (Priscilla-EM)</title>
-    <link href="style.css" rel="stylesheet" />
+
+    <link rel="preconnect" href="https://api.tvmaze.com" crossorigin />
+    <link rel="preconnect" href="https://static.tvmaze.com" crossorigin />
+    <link rel="dns-prefetch" href="https://api.tvmaze.com" />
+    <link rel="dns-prefetch" href="https://static.tvmaze.com" />
+
+    <style>
+      #root {
+        color: red;
+      }
+    </style>
+
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+
+    <!-- Load your JavaScript -->
+    <script src="script.js" defer></script>
   </head>
 
   <body>
     <h1 id="title">TV Show Episodes</h1>
-    <p id="episode-count"></p>
-    <!-- Search Bar -->
-    <input type="text" id="search" placeholder="Search episodes...">
-    
-    <!-- Episode Dropdown -->
-    <select id="episode-select">
-      <option value="">Select an episode</option>
-    </select>
+
+    <!-- Show Search and Dropdown -->
+    <input type="text" id="show-search" placeholder="Search shows..." />
     <label for="show-select">Select Show:</label>
     <select id="show-select">
-    <option value="">Select a show</option>
+      <option value="">Select a show</option>
     </select>
 
+    <!-- Episode Controls (initially hidden) -->
+    <p id="episode-count"></p>
+    <input
+      type="text"
+      id="search"
+      placeholder="Search episodes..."
+      style="display: none"
+    />
+    <select id="episode-select" style="display: none">
+      <option value="">Select an episode</option>
+    </select>
+
+    <!-- Back Button Placeholder -->
+    <div id="nav-container"></div>
+
     <div id="root"></div>
-
     <footer id="footer"></footer>
-
-
-    <!-- Loads YOUR javascript code -->
- 
-    <script src="script.js"></script>
   </body>
 </html>
-
